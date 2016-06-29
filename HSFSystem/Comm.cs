@@ -1,10 +1,11 @@
-﻿using HSFSystem;
+﻿// Copyright (c) 2016 California Polytechnic State University
+// Authors: Morgan Yost (morgan.yost125@gmail.com) Eric A. Mehiel (emehiel@calpoly.edu)
+
+using HSFSystem;
 using HSFUniverse;
 using MissionElements;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Xml;
 using Utilities;
 
@@ -17,6 +18,12 @@ namespace HSFSubsystem
         #endregion
 
         #region Constructors
+        /// <summary>
+        /// Constructor for built in subsystem
+        /// </summary>
+        /// <param name="CommXmlNode"></param>
+        /// <param name="dependencies"></param>
+        /// <param name="asset"></param>
         public Comm(XmlNode CommXmlNode, Dependency dependencies, Asset asset)
         {
             DefaultSubName = "Comm";
@@ -29,6 +36,11 @@ namespace HSFSubsystem
             dependencies.Add("PowerfromComm" + "." + Asset.Name, new Func<Event, HSFProfile<double>>(POWERSUB_PowerProfile_COMMSUB));
         }
 
+        /// <summary>
+        /// Constructor for scripted subsystem
+        /// </summary>
+        /// <param name="CommXmlNode"></param>
+        /// <param name="asset"></param>
         public Comm(XmlNode CommXmlNode, Asset asset)
         {
             DefaultSubName = "Comm";
@@ -40,6 +52,12 @@ namespace HSFSubsystem
         #endregion
 
         #region Methods
+        /// <summary>
+        /// An override of the Subsystem CanPerform method
+        /// </summary>
+        /// <param name="proposedEvent"></param>
+        /// <param name="environment"></param>
+        /// <returns></returns>
         public override bool CanPerform(Event proposedEvent, Universe environment)
         {
             IsEvaluated = true;
@@ -49,11 +67,16 @@ namespace HSFSubsystem
             {
                 HSFProfile<double> newProf = DependencyCollector(proposedEvent);
                 if (!newProf.Empty())
-                    proposedEvent.State.setProfile(DATARATE_KEY, newProf);
+                    proposedEvent.State.SetProfile(DATARATE_KEY, newProf);
             }
             return true;
         }
 
+        /// <summary>
+        /// Dependency function for power subsystem
+        /// </summary>
+        /// <param name="currentEvent"></param>
+        /// <returns></returns>
         public HSFProfile<double> POWERSUB_PowerProfile_COMMSUB(Event currentEvent)
         {
             return currentEvent.State.GetProfile(DATARATE_KEY) * 20;

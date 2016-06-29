@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) 2016 California Polytechnic State University
+// Authors: Morgan Yost (morgan.yost125@gmail.com) Eric A. Mehiel (emehiel@calpoly.edu)
+
+using System;
 using System.Collections.Generic;
 using HSFSystem;
 using MissionElements;
@@ -19,6 +22,11 @@ namespace HSFScheduler
         #endregion
 
         #region Methods
+        /// <summary>
+        /// Override of the Evaluate method
+        /// </summary>
+        /// <param name="schedule"></param>
+        /// <returns></returns>
         public override double Evaluate(SystemSchedule schedule)
         {
             double sum = 0;

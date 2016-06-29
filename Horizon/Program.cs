@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) 2016 California Polytechnic State University
+// Authors: Morgan Yost (morgan.yost125@gmail.com) Eric A. Mehiel (emehiel@calpoly.edu)
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
@@ -10,24 +13,66 @@ using UserModel;
 using HSFUniverse;
 using HSFSubsystem;
 using HSFSystem;
+using log4net;
 
 namespace Horizon
 {
     public class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
-            // Get the input filenames
-            //string simulationInputFilePath = args[1];
-            //string targetDeckFilePath = args[2];
-            //string modelInputFileName = args[3];
-            //string outputPath = args[4];
-            var simulationInputFilePath = @"..\..\..\SimulationInput.XML"; // @"C:\Users\admin\Documents\Visual Studio 2015\Projects\Horizon-Simulation-Framework\Horizon_v2_3\io\SimulationInput.XML";
-            var targetDeckFilePath = @"..\..\..\v2.2-300targets_old.xml";
-            var modelInputFilePath = @"..\..\..\DSAC_Static.xml";
+            // Begin the Logger
+            ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+            log.Info("STARTING HSF RUN"); //Do not delete
 
+            // Set Defaults
+            var simulationInputFilePath = @"..\..\..\SimulationInput.XML";
+            var targetDeckFilePath = @"..\..\..\v2.2-300targets.xml";
+            var modelInputFilePath = @"..\..\..\DSAC_Static.xml";
+            bool simulationSet = false, targetSet = false, modelSet = false;
+
+            // Get the input filenames
+            int i = 0;
+            foreach(var input in args)
+            {
+                i++;
+                switch (input)
+                {
+                    case "-s":
+                        simulationInputFilePath = args[i];
+                        simulationSet = true;
+                        break;
+                    case "-t":
+                        targetDeckFilePath = args[i];
+                        targetSet = true;
+                        break;
+                    case "-m":
+                        modelInputFilePath = args[i];
+                        modelSet = true;
+                        break;
+                }
+            }
+            ///add usage statement
+
+            if (!simulationSet)
+            {
+                log.Info("Using Default Simulation File");
+            }
+
+            if (!targetSet)
+            {
+                log.Info("Using Default Target File");
+            }
+
+            if (!modelSet)
+            {
+                log.Info("Using Default Model File");
+            }
+
+
+            // Initialize Output File
             var outputFileName = string.Format("output-{0:yyyy-MM-dd}-*", DateTime.Now);
-            var outputPath = @"..\..\..\";
+            var outputPath = @"C:\HorizonLog\";
             var txt = ".txt";
             string[] fileNames = System.IO.Directory.GetFiles(outputPath, outputFileName, System.IO.SearchOption.TopDirectoryOnly);
             double number = 0;
@@ -46,7 +91,10 @@ namespace Horizon
             // Load the target deck into the targets list from the XML target deck input file
             Stack<Task> systemTasks = new Stack<Task>();
             bool targetsLoaded = Task.loadTargetsIntoTaskList(XmlParser.GetTargetNode(targetDeckFilePath), systemTasks);
-            Console.WriteLine("Initial states set");
+            if (!targetsLoaded)
+            {
+                return 1;
+            }
 
             // Find the main model node from the XML model input file
             var modelInputXMLNode = XmlParser.GetModelNode(modelInputFilePath);
@@ -117,7 +165,7 @@ namespace Horizon
                         //Create a new Constraint
                         if (childNode.Name.Equals("CONSTRAINT"))
                         {
-                            constraintsList.Add(ConstraintFactory.getConstraint(childNode, subsystemMap, asset));
+                            constraintsList.Add(ConstraintFactory.GetConstraint(childNode, subsystemMap, asset));
                         }
                     }
                     if (ICNodes.Count > 0)
@@ -134,7 +182,7 @@ namespace Horizon
                     sub.Value.AddDependencyCollector();
                 subList.Add(sub.Value);
             }
-            Console.WriteLine("Subsystems and Constraints Loaded");
+            log.Info("Subsystems and Constraints Loaded");
 
             //Add all the dependent subsystems to the dependent subsystem list of the subsystems
             foreach (KeyValuePair<string, string> depSubPair in dependencyMap)
@@ -152,11 +200,11 @@ namespace Horizon
                 subsystemMap.TryGetValue(depFunc.Key, out subToAddDep);
                 subToAddDep.SubsystemDependencyFunctions.Add(depFunc.Value, dependencies.GetDependencyFunc(depFunc.Value));
             }
-            Console.WriteLine("Dependencies Loaded");
+            log.Info("Dependencies Loaded");
 
             SystemClass simSystem = new SystemClass(assetList, subList, constraintsList, SystemUniverse);
 
-            if (simSystem.checkForCircularDependencies())
+            if (simSystem.CheckForCircularDependencies())
                 throw new NotFiniteNumberException("System has circular dependencies! Please correct then try again.");
 
             Evaluator schedEvaluator = EvaluatorFactory.GetEvaluator(evaluatorNode, dependencies);
@@ -167,19 +215,20 @@ namespace Horizon
             {
                 systemSchedule.ScheduleValue = schedEvaluator.Evaluate(systemSchedule);
                 bool canExtendUntilEnd = true;
-                // Iterate through Subsystem Nodes and set that they havent run
+                // Extend the subsystem states to the end of the simulation 
                 foreach (var subsystem in simSystem.Subsystems)
                 {
                     if(systemSchedule.AllStates.Events.Count >0)
                         if (!subsystem.CanExtend(systemSchedule.AllStates.Events.Peek(), simSystem.Environment, SimParameters.SimEndSeconds))
-                            Console.WriteLine("oops");
+                            log.Error("Cannot Extend " + subsystem.Name + " to end of simulation");
                 }
             }
+
             // Sort the sysScheds by their values
             schedules.Sort((x, y) => x.ScheduleValue.CompareTo(y.ScheduleValue));
             schedules.Reverse();
             double maxSched = schedules[0].ScheduleValue;
-            int i = 0;
+            i = 0;
             //Morgan's Way
             using (StreamWriter sw = File.CreateText(outputPath))
             {
@@ -188,22 +237,18 @@ namespace Horizon
                     sw.WriteLine("Schedule Number: " + i + "Schedule Value: " + schedules[i].ScheduleValue);
                     foreach (var eit in sched.AllStates.Events)
                     {
-                        if (eit.Tasks.Values.GetType().Equals(TaskType.COMM))
-                        {
-                            Console.WriteLine("Schedule {0} contains Comm task", i);
-                        }
-                        if (i < 15)
-                        { //just compare the first 5 schedules for now
+                        if (i < 5)//just compare the first 5 schedules for now
+                        { 
                             sw.WriteLine(eit.ToString());
                         }
                     }
                     i++;
             }
-            Console.WriteLine(maxSched);
+            log.Info("Max Schedule Value: " + maxSched);
             }
 
-            ////Mehiel's way
-            string stateDataFilePath = @"..\..\..\" + string.Format("output-{0:yyyy-MM-dd-hh-mm-ss}", DateTime.Now);
+            // Mehiel's way
+            string stateDataFilePath = @"C:\HorizonLog\" + string.Format("output-{0:yyyy-MM-dd-hh-mm-ss}", DateTime.Now);
             SystemSchedule.WriteSchedule(schedules[0], stateDataFilePath);
 
             var csv = new StringBuilder();
@@ -212,13 +257,8 @@ namespace Horizon
             {
                 File.WriteAllText(@"..\..\..\" + asset.Name + "_dynamicStateData.csv", asset.AssetDynamicState.ToString());
             }
-
+            return 0;
             //   Console.ReadKey();
-     
-
-                // *********************************Output selected data*************************************
-             //   bool schedOutput = dataOut.writeAll(schedules, simSystem);
-            // ******************************************************************************************
         }
     }
 }

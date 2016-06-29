@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright (c) 2016 California Polytechnic State University
+// Authors: Morgan Yost (morgan.yost125@gmail.com) Eric A. Mehiel (emehiel@calpoly.edu)
+
+using System;
 using Utilities;
 using UserModel;
-/**
-* Creates a Sun model able to compute the Sun Vector to the Earth as well as 
-* determining whether the spacecraft is in the shadow of the Earth.
-* @author Brian Butler
-* @author Seth Silva
-*/
 
 namespace HSFUniverse
 {
@@ -20,6 +13,9 @@ namespace HSFUniverse
         UMBRA,
         PENUMBRA
     };
+    /// If the Sun is created with isEarthSunVecConstant set to true, the value for the
+    /// vector at a simulation time of 0 seconds will be alwyas be used.
+    /// Code from "Fundamentals of Astrodynamics and Applications."
     public class Sun
     {
         #region Attributes
@@ -53,9 +49,6 @@ namespace HSFUniverse
         #region Methods
         /// <summary>
         ///  Calculates the Earth-Sun vector in [km] according to the simualtion time.
-        /// If the Sun is created with isEarthSunVecConstant set to true, the value for the
-        /// vector at a simulation time of 0 seconds will be alwyas be used.
-        /// Code from "Fundamentals of Astrodynamics and Applications."
         /// </summary>
         /// <param name="simTime">the simulation time at which the Earth-Sun vector is required</param>
         /// <returns>a Matrix containing the Earth-Sun vector in ECI.</returns>
@@ -131,7 +124,7 @@ namespace HSFUniverse
         }//End getEarthSunVec method
 
         /// <summary>
-        /// Casts a shadow on the specified Position.Computes whether the position matrix given is located in the shadow of
+        /// Casts a shadow on the specified Position. Computes whether the position matrix given is located in the shadow of
         /// the Earth, and it determines which shadow: the Penumbra or Umbra.This
         /// function calls the getEarSunVec function to retrieve the Earth-Sun vector. 	
         /// Code from "Fundamentals of Astrodynamics and Applications"

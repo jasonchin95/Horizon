@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Copyright (c) 2016 California Polytechnic State University
+// Authors: Morgan Yost (morgan.yost125@gmail.com) Eric A. Mehiel (emehiel@calpoly.edu)
+
+
 using IronPython.Hosting;
-using IronPython.Runtime;
-using Microsoft.Scripting.Hosting;
-using System.Dynamic;
 using HSFSystem;
-using MissionElements;
-using HSFUniverse;
 using System.Xml;
 using UserModel;
 
@@ -24,6 +21,11 @@ namespace HSFScheduler
         #endregion
 
         #region Constructors
+        /// <summary>
+        /// Constructor to create the scriped evaluator and initialize the python instance
+        /// </summary>
+        /// <param name="scriptedNode"></param>
+        /// <param name="deps"></param>
         public ScriptedEvaluator(XmlNode scriptedNode, Dependency deps)
         {
             string pythonFilePath = "", className = "";
@@ -39,12 +41,16 @@ namespace HSFScheduler
         #endregion
 
         #region Methods
+        /// <summary>
+        /// Implementation of the evaluate method
+        /// </summary>
+        /// <param name="schedule"></param>
+        /// <returns></returns>
         public override double Evaluate(SystemSchedule schedule)
         {
             dynamic eval = _pythonInstance.Evaluate(schedule);
             return (double)eval;
         }
-
         #endregion
     }
 }

@@ -1,9 +1,13 @@
+// Copyright (c) 2016 California Polytechnic State University
+// Authors: Morgan Yost (morgan.yost125@gmail.com) Eric A. Mehiel (emehiel@calpoly.edu)
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 
 namespace HSFUniverse
 {
+    // This class not currently used, needs a lot of work
     public class CloudCover{
         private const int NUM_REGIONS = 14;
         private const int NUM_DAYS = 30;

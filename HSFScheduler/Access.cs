@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) 2016 California Polytechnic State University
+// Authors: Morgan Yost (morgan.yost125@gmail.com) Eric A. Mehiel (emehiel@calpoly.edu)
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
@@ -15,11 +17,14 @@ namespace HSFScheduler
     /// </summary>
     public class Access
     {
+        #region Attributes
         public Asset Asset { get; private set; }
         public Task Task { get; private set; }
         public double AccessStart { get; set; }
         public double AccessEnd { get; set; }
+        #endregion
 
+        #region Constructors
         public Access(Asset asset, Task task)
         {
             Asset = asset;
@@ -30,13 +35,28 @@ namespace HSFScheduler
         {
 
         }
+        #endregion
 
+        #region methods
+        /// <summary>
+        /// Find all accesses available to an asset at the current time
+        /// </summary>
+        /// <param name="accesses"></param>
+        /// <param name="asset"></param>
+        /// <param name="currentTime"></param>
+        /// <returns></returns>
         public static Stack<Access> getCurrentAccessesForAsset(Stack<Access> accesses, Asset asset, double currentTime)
         {
             Stack<Access> allAccesses = Access.getCurrentAccesses(accesses, currentTime);
             return new Stack<Access>(allAccesses.Where(item => item.Asset == asset));
         }
 
+        /// <summary>
+        /// Find all accesses available to all assets at the current time
+        /// </summary>
+        /// <param name="accesses"></param>
+        /// <param name="currentTime"></param>
+        /// <returns></returns>
         public static Stack<Access> getCurrentAccesses(Stack<Access> accesses, double currentTime)
         {
               return new Stack<Access>(accesses.Where(item => (item.AccessStart <= currentTime && item.AccessEnd >= currentTime)));
@@ -88,11 +108,19 @@ namespace HSFScheduler
             return accessesByAsset;
         }
 
+        /// <summary>
+        /// Override of the too string method
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             return Asset.Name + "_to_" + Task.Target.Name;
         }
 
+        /// <summary>
+        /// Method to write out times targets are available
+        /// </summary>
+        /// <param name="pregeneratedAccesses"></param>
         public static void writeAccessReport(Stack<Stack<Access>> pregeneratedAccesses)
         {
             string outputDir = SimParameters.OutputDirector;
@@ -106,6 +134,6 @@ namespace HSFScheduler
                         file.WriteLine(access.Asset.Name + ',' + access.Task.Target.Name + ',' + access.AccessStart + ',' + access.AccessEnd);
             }
         }
-
+        #endregion
     }
 }

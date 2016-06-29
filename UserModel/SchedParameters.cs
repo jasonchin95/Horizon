@@ -1,16 +1,29 @@
-﻿using System;
+﻿// Copyright (c) 2016 California Polytechnic State University
+// Authors: Morgan Yost (morgan.yost125@gmail.com) Eric A. Mehiel (emehiel@calpoly.edu)
+
+using System;
 using System.Xml;
 
 namespace UserModel
 {
+    /// <summary>
+    /// Static class to maintain simulation parameters
+    /// </summary>
     public static class SchedParameters
     {
+        #region Attributes
         public static double SimStepSeconds { get; private set; }
         public static int MaxNumScheds { get; private set; }
         public static int NumSchedCropTo { get; private set; }
 
         private static bool _isInitialized = false;
+        #endregion
 
+        /// <summary>
+        /// Load the schedule parameters from the XML file
+        /// </summary>
+        /// <param name="schedulerXMLNode"></param>
+        /// <returns></returns>
         public static bool LoadSchedParameters(XmlNode schedulerXMLNode)
         {
             if (!_isInitialized)

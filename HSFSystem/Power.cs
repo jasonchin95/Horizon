@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) 2016 California Polytechnic State University
+// Authors: Morgan Yost (morgan.yost125@gmail.com) Eric A. Mehiel (emehiel@calpoly.edu)
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,19 +17,19 @@ namespace HSFSubsystem
     public class Power : Subsystem
     {
         #region Attributes
-        //Some Defaults
+        // Some Default Values
         protected double _batterySize = 1000000;
         protected double _fullSolarPanelPower = 150;
         protected double _penumbraSolarPanelPower = 75;
 
-        //put these in constructor and get from xml
         protected StateVarKey<double> DOD_KEY;
         protected StateVarKey<double> POWIN_KEY; 
         #endregion Attributes
 
         #region Constructors
         /// <summary>
-        /// Create a new power node. Defaults: batterySize = 1000000, fullSolarPanelPower =150, penumbraSolarPanelPower = 75
+        /// Constructor for built in subsystem
+        /// Defaults: batterySize = 1000000, fullSolarPanelPower =150, penumbraSolarPanelPower = 75
         /// </summary>
         /// <param name="PowerNode"></param>
         /// <param name="dependencies"></param>
@@ -48,6 +51,12 @@ namespace HSFSubsystem
             if(PowerNode.Attributes["penumbraSolarPower"] != null)
                 _penumbraSolarPanelPower = (double)Convert.ChangeType(PowerNode.Attributes["penumbraSolarPower"].Value, typeof(double));
         }
+
+        /// <summary>
+        /// Constructor for built in subsystem
+        /// </summary>
+        /// <param name="PowerNode"></param>
+        /// <param name="asset"></param>
         public Power(XmlNode PowerNode, Asset asset)
         {
             DefaultSubName = "Power";
@@ -67,6 +76,11 @@ namespace HSFSubsystem
         #endregion Constructors
 
         #region Methods
+        /// <summary>
+        /// Calculate the solar panel power in depending on position
+        /// </summary>
+        /// <param name="shadow"></param>
+        /// <returns></returns>
         protected double GetSolarPanelPower(ShadowState shadow)
         {
             switch (shadow)
@@ -79,6 +93,16 @@ namespace HSFSubsystem
                     return _fullSolarPanelPower;
             }
         }
+
+        /// <summary>
+        /// Calculate the solar panel power in over the time of the task
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <param name="state"></param>
+        /// <param name="position"></param>
+        /// <param name="universe"></param>
+        /// <returns></returns>
         protected HSFProfile<double> CalcSolarPanelPowerProfile(double start, double end, SystemState state, DynamicState position, Universe universe)
         {
             // create solar panel profile for this event
@@ -96,7 +120,7 @@ namespace HSFSubsystem
                     lastShadow = shadow;
                 }
             }
-            state.addValue(POWIN_KEY, solarPanelPowerProfile);
+            state.AddValue(POWIN_KEY, solarPanelPowerProfile);
             return solarPanelPowerProfile;
         }
 
@@ -120,12 +144,12 @@ namespace HSFSubsystem
 
             if (ee > SimParameters.SimEndSeconds)
             {
-                Logger.Report("Simulation ended");
+                Console.WriteLine("Simulation ended");
                 return false;
             }
 
             // get the old DOD
-            double olddod = _newState.getLastValue(Dkeys.First()).Value;
+            double olddod = _newState.GetLastValue(Dkeys.First()).Value;
 
             // collect power profile out
             Delegate DepCollector;
@@ -142,7 +166,7 @@ namespace HSFSubsystem
             double freq = 1.0;
             HSFProfile<double> dodProf = dodrateofchange.lowerLimitIntegrateToProf(es, te, freq, 0.0, ref exceeded, 0, olddod);
 
-            _newState.addValue(DOD_KEY, dodProf);
+            _newState.AddValue(DOD_KEY, dodProf);
             return true;
         }
 
@@ -159,12 +183,12 @@ namespace HSFSubsystem
                 return false;
 
             Sun sun = universe.Sun;
-            double te = proposedEvent.State.getLastValue(DOD_KEY).Key;
+            double te = proposedEvent.State.GetLastValue(DOD_KEY).Key;
             if (proposedEvent.GetEventEnd(Asset) < evalToTime)
                 proposedEvent.SetEventEnd(Asset, evalToTime);
 
             // get the dod initial conditions
-            double olddod = proposedEvent.State.getValueAtTime(DOD_KEY, te).Value;
+            double olddod = proposedEvent.State.GetValueAtTime(DOD_KEY, te).Value;
 
             // collect power profile out
             Delegate DepCollector;
@@ -185,7 +209,7 @@ namespace HSFSubsystem
             {
                 dodProf[ee] = dodProf.LastValue();
             }
-            proposedEvent.State.addValue(DOD_KEY, dodProf);
+            proposedEvent.State.AddValue(DOD_KEY, dodProf);
             return true;
         }
         #endregion Methods

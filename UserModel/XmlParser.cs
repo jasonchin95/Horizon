@@ -1,15 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright (c) 2016 California Polytechnic State University
+// Authors: Morgan Yost (morgan.yost125@gmail.com) Eric A. Mehiel (emehiel@calpoly.edu)
+
+using System;
 using System.Xml;
+using log4net;
 
 namespace UserModel
 {
-    public class XmlParser
+    public class XmlParser//todo catch exceptions with logger
     {
+        private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        /// <summary>
+        /// Parse scripted subsystem xml
+        /// </summary>
+        /// <param name="node"></param>
+        /// <param name="pythonFilePath"></param>
+        /// <param name="className"></param>
         public static void ParseScriptedSrc(XmlNode node, ref string pythonFilePath, ref string className)
         {
             if (node.Attributes["src"] == null)
@@ -22,6 +29,11 @@ namespace UserModel
             className = node.Attributes["className"].Value.ToString();
         }
 
+        /// <summary>
+        /// Get the simulation input XML node from the to be used in the SimParameters constructor
+        /// </summary>
+        /// <param name="simulationInputFilePath"></param>
+        /// <returns></returns>
         public static XmlNode ParseSimulationInput(string simulationInputFilePath)
         {
             var XmlDoc = new XmlDocument();
@@ -31,8 +43,7 @@ namespace UserModel
             XmlEnum.MoveNext();
             var simulationInputXMLNode = (XmlNode)XmlEnum.Current;
             var scenarioName = simulationInputXMLNode.Attributes["scenarioName"].InnerXml;
-            Console.Write("EXECUITING SCENARIO: ");
-            Console.WriteLine(scenarioName);
+            log.Info("EXECUITING SCENARIO: "+ scenarioName);
 
             // Load the simulation parameters from the XML simulation input file
             XmlNode simParametersXMLNode = simulationInputXMLNode["SIMULATION_PARAMETERS"];
@@ -51,16 +62,34 @@ namespace UserModel
             return null;
         }
 
+        /// <summary>
+        /// Get target node from input file to be passed to target constructor
+        /// </summary>
+        /// <param name="targetDeckFilePath"></param>
+        /// <returns></returns>
         public static XmlNode GetTargetNode(string targetDeckFilePath)
         {
             var XmlDoc = new XmlDocument();
-            XmlDoc.Load(targetDeckFilePath);
+            try
+            {
+                XmlDoc.Load(targetDeckFilePath);
+            }
+            catch(Exception e)
+            {
+                log.Fatal(e);
+                return null;
+            }
             XmlNodeList targetDeckXMLNodeList = XmlDoc.GetElementsByTagName("TARGETDECK");
             var XmlEnum = targetDeckXMLNodeList.GetEnumerator();
             XmlEnum.MoveNext();
             return (XmlNode)XmlEnum.Current;
         }
 
+        /// <summary>
+        /// Get model node from input file to be used to create subsysetms
+        /// </summary>
+        /// <param name="targetDeckFilePath"></param>
+        /// <returns></returns>
         public static XmlNode GetModelNode(string modelInputFilePath)
         {
             var XmlDoc = new XmlDocument();
@@ -69,7 +98,7 @@ namespace UserModel
             }
             catch(Exception e)
             {
-                Console.WriteLine("Could not find input file!");
+                log.Error("Could not find input file!");
                 throw;
             }
             XmlNodeList modelXMLNodeList = XmlDoc.GetElementsByTagName("MODEL");

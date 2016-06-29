@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) 2016 California Polytechnic State University
+// Authors: Morgan Yost (morgan.yost125@gmail.com) Eric A. Mehiel (emehiel@calpoly.edu)
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,11 +17,6 @@ namespace Utilities
         //http://www.codeproject.com/Articles/28952/Shallow-Copy-vs-Deep-Copy-in-NET
         public static T Copy<T>(T item)
         {
-            if (typeof(T).Equals(typeof(Matrix<double>)))
-            {
-                Console.WriteLine("trying to copy matrix");
-            }
-
             BinaryFormatter formatter = new BinaryFormatter();
             MemoryStream stream = new MemoryStream();
             formatter.Serialize(stream, item);

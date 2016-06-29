@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿// Copyright (c) 2016 California Polytechnic State University
+// Authors: Morgan Yost (morgan.yost125@gmail.com) Eric A. Mehiel (emehiel@calpoly.edu)
+
+using System.Collections.Generic;
 using System;
 using Utilities;
 using MissionElements;
@@ -9,9 +12,10 @@ namespace HSFScheduler
     [Serializable]
     public class StateHistory
     {
+        #region Attributes
         public SystemState InitialState { get; private set; }
         public Stack<Event> Events { get; private set; }
-        //   public Asset Asset { get; private set; }
+        #endregion
 
         /// <summary>
         ///  Creates a new empty schedule with the given initial state.

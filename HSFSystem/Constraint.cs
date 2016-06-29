@@ -1,7 +1,9 @@
+// Copyright (c) 2016 California Polytechnic State University
+// Authors: Morgan Yost (morgan.yost125@gmail.com) Eric A. Mehiel (emehiel@calpoly.edu)
+
 using System;
 using System.Collections.Generic;
 using HSFSubsystem;
-using Utilities;
 using MissionElements;
 
 namespace HSFSystem
@@ -9,32 +11,21 @@ namespace HSFSystem
     [Serializable]
     public abstract class Constraint
     {
-        //List of subsystem nodes on which the Constraint operates
+        // List of subsystem nodes on which the Constraint operates
         public List<Subsystem> Subsystems { get; protected set; }
-      //  public Guid ID;
 
-        //// TODO (EAM): What is this used for? (MY) nothing I hope!
-        //public void AddConstrainedSub(Subsystem node)
-        //{
-        //    Subsystems.Add(node);
-        //}
-
-        /**
-         * Applies the constraint to the appropriate variables in the given state,
-         * that contains updated state data for all the requested Subsystems.
-         * @param state a partially updated state
-         * @return true if the state passes the constraint check
-         */
-        
+        // Constraint Name for identification in post processsing
+        public string Name;
+       
+        /// <summary>
+        /// Applies the constraint to the appropriate variables in the given state,
+        /// that contains updated state data for all the requested Subsystems.
+        /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
         public virtual bool Accepts(SystemState state)
         {
             return false;
         }
-        
-        public virtual Constraint clone()
-        {
-            return DeepCopy.Copy<Constraint>(this);
-        }
-
     }
 }
